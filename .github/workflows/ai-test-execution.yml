@@ -143,84 +143,6 @@ jobs:
             echo "coverage_available=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Generate Test Intelligence Report
-        id: intelligence-analysis
-        if: always() && steps.test-execution.outcome == 'failure'
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          cd target-repo
-
-          # Create intelligence analysis script
-          cat > analyze_failures.py << 'EOF'
-          import os
-          import json
-          import sys
-          sys.path.append('../ai-test-generator')
-
-          from ai_c_test_generator.intelligence import TestIntelligenceAnalyzer
-
-          def parse_test_results():
-              results = {}
-              test_reports_dir = "tests/test_reports"
-
-              if not os.path.exists(test_reports_dir):
-                  return results
-
-              for filename in os.listdir(test_reports_dir):
-                  if filename.endswith('.txt'):
-                      test_name = filename.replace('.txt', '')
-                      filepath = os.path.join(test_reports_dir, filename)
-
-                      with open(filepath, 'r') as f:
-                          content = f.read()
-
-                      # Determine if test passed - assume passed unless "FAILED" is present
-                      # This handles cases where passed test files may not contain explicit "PASSED" markers
-                      passed = "FAILED" not in content.upper()
-
-                      results[test_name] = {
-                          'passed': passed,
-                          'error_output': content if not passed else '',
-                          'compilation_errors': []  # Could be enhanced to parse actual errors
-                      }
-
-              return results
-
-          def main():
-              # Get test results
-              test_results = parse_test_results()
-
-              # Get source files
-              source_files = []
-              if os.path.exists('src'):
-                  source_files = [f for f in os.listdir('src') if f.endswith('.c') or f.endswith('.h')]
-
-              # Initialize intelligence analyzer
-              analyzer = TestIntelligenceAnalyzer(os.environ.get('GEMINI_API_KEY'))
-
-              # Generate intelligence report
-              intelligence_report = analyzer.analyze_test_failures(test_results, source_files)
-
-              # Save reports
-              os.makedirs('reports', exist_ok=True)
-              analyzer.generate_intelligence_report('reports/test_analysis.md', intelligence_report)
-              analyzer.generate_fix_priority_csv('reports/fix_priority.csv', intelligence_report)
-
-              # Save JSON report for workflow
-              with open('reports/intelligence_report.json', 'w') as f:
-                  json.dump(intelligence_report, f, indent=2)
-
-              print("Intelligence analysis complete!")
-              print(f"Quality Score: {intelligence_report['quality_metrics']['quality_score']}/100")
-              print(f"Time Savings: {intelligence_report['executive_summary']['total_time_savings']}")
-
-          if __name__ == "__main__":
-              main()
-          EOF
-
-          # Run intelligence analysis
-          python analyze_failures.py
 
       - name: Comment test results on issue
         if: github.event_name == 'issues'
@@ -237,36 +159,6 @@ jobs:
             } else {
               body = `[FAILED] **AI Test Execution Completed with Failures**\n\n## Test Results\n\`\`\`\n${testSummary}\n\`\`\`\n\nSome tests failed. Please check the detailed test reports in the workflow artifacts.`;
 
-              // Add intelligence insights if available
-              try {
-                const fs = require('fs');
-                const intelligenceData = fs.existsSync('target-repo/reports/intelligence_report.json') ?
-                  fs.readFileSync('target-repo/reports/intelligence_report.json', 'utf8') : null;
-
-                if (intelligenceData) {
-                  const report = JSON.parse(intelligenceData);
-                  const qualityScore = report.quality_metrics?.quality_score || 'N/A';
-                  const timeSavings = report.executive_summary?.total_time_savings || 'N/A';
-                  const topFixes = report.priority_fixes?.slice(0, 3) || [];
-
-                  body += `\n\n## 🔍 Test Intelligence Analysis\n`;
-                  body += `**Quality Score**: ${qualityScore}/100\n`;
-                  body += `**Estimated Time Savings**: ${timeSavings}\n\n`;
-
-                  if (topFixes.length > 0) {
-                    body += `### 🚀 Priority Fixes (Quick Wins)\n`;
-                    topFixes.forEach((fix, index) => {
-                      body += `${index + 1}. **${fix.test_name}** (${fix.estimated_time})\n`;
-                      body += `   - ${fix.root_cause}\n`;
-                      body += `   - Impact: ${fix.impact}\n\n`;
-                    });
-                  }
-
-                  body += `📊 **Full Intelligence Report**: Download \`test_analysis.md\` and \`fix_priority.csv\` from workflow artifacts.\n`;
-                }
-              } catch (error) {
-                console.log('Intelligence report not available:', error.message);
-              }
             }
 
             if (coverageAvailable === 'true') {
@@ -298,13 +190,6 @@ jobs:
           path: target-repo/tests/coverage_reports/
           retention-days: 30
 
-      - name: Upload intelligence reports
-        if: always() && steps.intelligence-analysis.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: intelligence-reports
-          path: target-repo/reports/
-          retention-days: 30
 
   upload-pages-artifact:
     needs: run-tests
