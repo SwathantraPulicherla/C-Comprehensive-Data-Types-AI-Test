@@ -13,16 +13,16 @@
 // Stub control structure for process_temperature
 typedef struct {
     uint32_t call_count;
-    double last_temperature;
+    float last_temperature;
     TempProcessor last_processor; // Captures the function pointer passed
-    double temperatures[10];     // Array to capture multiple temperature calls
-    int processors_called[10];   // To track which processor was called (index) if needed
+    float temperatures[10];       // Array to capture multiple temperature calls
+    int processors_called[10];    // To track which processor was called (index) if needed
     // Assuming 10 calls max for reasonable test cases
 } stub_process_temperature_t;
 
 static stub_process_temperature_t stub_process_temperature = {0};
 
-void process_temperature(double temperature, TempProcessor processor) {
+void process_temperature(float temperature, TempProcessor processor) {
     if (stub_process_temperature.call_count < sizeof(stub_process_temperature.temperatures) / sizeof(stub_process_temperature.temperatures[0])) {
         stub_process_temperature.temperatures[stub_process_temperature.call_count] = temperature;
     }
@@ -42,9 +42,9 @@ void MockLogger(const char* message) {
 }
 
 // Mock function for TempProcessor type (used as a callback within process_sensors)
-static double mock_temp_processor_last_temp = 0.0;
+static float mock_temp_processor_last_temp = 0.0f;
 static uint32_t mock_temp_processor_call_count = 0;
-void MockTempProcessor(double temperature_value) {
+void MockTempProcessor(float temperature_value) {
     mock_temp_processor_last_temp = temperature_value;
     mock_temp_processor_call_count++;
 }
@@ -100,7 +100,7 @@ void test_calculate_average_negative_count(void) {
     Sensor s2 = {30.0};
     Sensor* sensors_data[] = {&s1, &s2};
     SensorArray sensors = sensors_data;
-    double result = calculate_average(sensors, 0.0f);
+    double result = calculate_average(sensors, -1);
     // Expected: Function returns 0.0 when count is negative
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0, result);
 }
