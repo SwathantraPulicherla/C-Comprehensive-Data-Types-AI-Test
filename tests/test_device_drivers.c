@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h> // For malloc/free stubs
-#include "../src/hardware_types.h" // Hardware register type definitions
 
 // --- Mock types from device_drivers.h and hardware ---
 // These definitions are required so the test file can compile without including
@@ -80,6 +79,11 @@ struct can_handle_t { // Mock CAN handle
     uint32_t buffer_size;
     // ... other members as needed
 };
+
+typedef struct USART_TypeDef USART_TypeDef;
+typedef struct SPI_TypeDef SPI_TypeDef;
+typedef struct GPIO_TypeDef GPIO_TypeDef;
+typedef struct can_handle_t can_handle_t;
 
 // Mock config types
 typedef struct {
@@ -540,7 +544,7 @@ void test_uart_driver_init_Success(void) {
     TEST_ASSERT_TRUE(stub_uart_init_data.was_called);
     TEST_ASSERT_EQUAL(1, stub_uart_init_data.call_count);
     TEST_ASSERT_EQUAL_PTR(&mock_uart_regs, stub_uart_init_data.captured_uart_regs);
-    TEST_ASSERT_EEQUAL_UINT32(config.baud_rate, stub_uart_init_data.captured_config.baud_rate);
+    TEST_ASSERT_EQUAL_UINT32(config.baud_rate, stub_uart_init_data.captured_config.baud_rate);
     // Expected: Driver state changes to READY
     TEST_ASSERT_EQUAL(DEVICE_STATE_READY, driver.state);
     // Expected: Timeout and error_index initialized

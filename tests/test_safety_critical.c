@@ -25,7 +25,7 @@ void mock_watchdog_timeout_callback(void *context) {
 static bool mock_emergency_cb_called = false;
 static uint16_t mock_emergency_cb_reason = 0;
 static void *mock_emergency_cb_context = NULL;
-void mock_safety_system_emergency_callback(uint16_t reason, void *context) {
+void mock_safety_system_emergency_callback(uint32_t reason, void *context) {
     mock_emergency_cb_called = true;
     mock_emergency_cb_reason = reason;
     mock_emergency_cb_context = context;
