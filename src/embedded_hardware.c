@@ -1,4 +1,5 @@
 #include "embedded_hardware.h"
+#include <stddef.h>
 
 // GPIO Functions
 error_t gpio_init(GPIO_TypeDef *gpio, gpio_config_t *config) {
