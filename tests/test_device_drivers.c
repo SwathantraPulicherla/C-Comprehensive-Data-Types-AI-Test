@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h> // For malloc/free stubs
+#include "../src/hardware_types.h" // Hardware register type definitions
 
 // --- Mock types from device_drivers.h and hardware ---
 // These definitions are required so the test file can compile without including

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "embedded_hardware.h"
 #include "communication_protocols.h"
+#include "hardware_types.h" // Hardware register type definitions
 
 // Device States
 typedef enum {
