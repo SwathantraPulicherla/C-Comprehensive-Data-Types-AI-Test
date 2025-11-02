@@ -65,6 +65,7 @@ jobs:
         # Generate tests with same quality settings as local development
         echo "[WORKFLOW] Calling ai-c-testgen..."
         ai-c-testgen \
+          --api-key "$GEMINI_API_KEY" \
           --source-dir src \
           --verbose \
           --regenerate-on-low-quality \
